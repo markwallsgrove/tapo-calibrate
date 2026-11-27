@@ -12,26 +12,15 @@ SCENE = (180.0, 185.0, 240.0)
 ENV = {ENV_HOST: "192.0.2.10", ENV_PASSWORD: "cloud-secret", ENV_RTSP_USER: "cam-user", ENV_RTSP_PASSWORD: "p@ss:word"}
 
 
-def solid(out: Path, rgb: tuple[int, int, int], size: str = "64x36") -> Path:
-    """An image of one colour, made by ffmpeg."""
-    colour = "0x{:02x}{:02x}{:02x}".format(*rgb)
+def solid(out: Path, rgb: tuple[int, int, int], width: int = 64, height: int = 36) -> Path:
+    """A PNG of one colour. Raw RGB input keeps the colour exact on every ffmpeg version."""
     subprocess.run(
-        [
-            "ffmpeg",
-            "-loglevel",
-            "error",
-            "-y",
-            "-f",
-            "lavfi",
-            "-i",
-            f"color=c={colour}:s={size}",
-            "-frames:v",
-            "1",
-            str(out),
-        ],
+        ["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}"]
+        + ["-i", "-", "-frames:v", "1", str(out.with_suffix(".png"))],
+        input=bytes(rgb) * width * height,
         check=True,
     )
-    return out
+    return out.with_suffix(".png")
 
 
 class FakeRig:
@@ -60,7 +49,7 @@ class FakeRig:
     def grab(self, out: Path) -> Path:
         gains = (int(self.common["wb_R_gain"]), int(self.common["wb_G_gain"]), int(self.common["wb_B_gain"]))
         r, g, b = (min(255, round(level * gain / 50)) for level, gain in zip(self.scene, gains, strict=True))
-        return solid(out.with_suffix(".png"), (r, g, b))
+        return solid(out, (r, g, b))
 
 
 @pytest.fixture
