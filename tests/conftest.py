@@ -14,9 +14,9 @@ ENV = {ENV_HOST: "192.0.2.10", ENV_PASSWORD: "cloud-secret", ENV_RTSP_USER: "cam
 
 def solid(out: Path, rgb: tuple[int, int, int], width: int = 64, height: int = 36) -> Path:
     """A PNG of one colour. Raw RGB input keeps the colour exact on every ffmpeg version."""
+    raw = ["-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}", "-i", "-"]
     subprocess.run(
-        ["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}"]
-        + ["-i", "-", "-frames:v", "1", str(out.with_suffix(".png"))],
+        ["ffmpeg", "-loglevel", "error", "-y", *raw, "-frames:v", "1", str(out.with_suffix(".png"))],
         input=bytes(rgb) * width * height,
         check=True,
     )
