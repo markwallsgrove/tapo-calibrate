@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tapo-calibrate"
+version = "0.1.0"
+description = "Calibrate the colours of a TP-Link Tapo camera through its local API"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = ["pytapo>=3.3"]
+
+[project.optional-dependencies]
+dev = ["mypy>=1.13", "pytest>=8", "pytest-cov>=6", "ruff>=0.8"]
+
+[project.scripts]
+tapo-calibrate = "tapo_calibrate.cli:run"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=tapo_calibrate --cov-branch --cov-report=term-missing --cov-fail-under=100"
+
+[tool.coverage.run]
+source = ["tapo_calibrate"]
+# The pytapo adapter needs a real camera, so tests use a fake rig instead.
+omit = ["*/tapo_calibrate/tapo.py"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+mypy_path = "src"
+
+# pytapo ships no type information.
+[[tool.mypy.overrides]]
+module = ["pytapo", "pytapo.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "D", "RUF", "PL", "PT", "C4", "PIE", "RET"]
+ignore = ["D203", "D213", "D401", "PLR0913", "PLR2004"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["tapo_calibrate"]
+force-sort-within-sections = true
+combine-as-imports = true
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
